@@ -1,0 +1,31 @@
+services:
+  api:
+    build: .
+    container_name: deepsearcher_api
+    command: ["uv", "run", "python", "main.py", "--enable-cors", "true"]
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEEPSEARCHER_MOUNT_DIR: /app/mounted_data
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./deepsearcher/config.yaml:/app/deepsearcher/config.yaml
+      - ./mounted_data:/app/mounted_data
+
+  mcp:
+    build: .
+    container_name: deepsearcher_mcp
+    command: ["uv", "run", "python", "mcp_server.py"]
+    stdin_open: true
+    tty: true
+    profiles: ["mcp"]
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEEPSEARCHER_MOUNT_DIR: /app/mounted_data
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./deepsearcher/config.yaml:/app/deepsearcher/config.yaml
+      - ./mounted_data:/app/mounted_data

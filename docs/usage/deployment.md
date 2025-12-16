@@ -60,8 +60,8 @@ docker run -p 8000:8000 \
   -e OPENAI_API_KEY=your_openai_api_key \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/logs:/app/logs \
-  -v $(pwd)/deepsearcher/config.yaml:/app/deepsearcher/config.yaml \
-  deepsearcher:latest
+-v $(pwd)/deepsearcher/config.yaml:/app/deepsearcher/config.yaml \
+deepsearcher:latest
 ```
 
 This command:
@@ -70,4 +70,33 @@ This command:
 - Mounts the local `data`, `logs`, and configuration file to the container
 - Runs the previously built `deepsearcher:latest` image
 
-> **Note:** Replace `your_openai_api_key` with your actual OpenAI API key, or set any other environment variables required for your configuration. 
+> **Note:** Replace `your_openai_api_key` with your actual OpenAI API key, or set any other environment variables required for your configuration.
+
+### Run as an MCP Server (STDIO)
+
+You can expose DeepSearcher as an MCP server over STDIO with the same image. The container uses `/app/mounted_data` as the default mount point for host files, and relative paths passed to MCP tools are resolved under this directory.
+
+```shell
+# Build once
+docker build -t deepsearcher:latest .
+
+# Run MCP server interactively (STDIO)
+docker run -i --rm \
+  -e OPENAI_API_KEY=your_openai_api_key \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/logs:/app/logs \
+  -v $(pwd)/deepsearcher/config.yaml:/app/deepsearcher/config.yaml \
+  -v $(pwd)/mounted_data:/app/mounted_data \
+  deepsearcher:latest uv run python mcp_server.py
+```
+
+If you prefer Docker Compose, a helper profile is provided:
+
+```shell
+docker compose run --rm --profile mcp mcp
+```
+
+You can wire this command into an MCP-compatible client (e.g., Claude Desktop) by setting the command to `docker run -i ... mcp_server.py` as above. Available MCP tools:
+- `query_tool`: Run a DeepSearcher query (`max_iter` optional).
+- `load_from_local_files_tool`: Load files from the mounted directory (`/app/mounted_data`) or any absolute path inside the container.
+- `load_from_website_tool`: Crawl URLs and load them into the vector store.

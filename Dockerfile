@@ -11,6 +11,7 @@ COPY pyproject.toml uv.lock LICENSE README.md ./
 COPY deepsearcher/ ./deepsearcher/
 
 RUN uv sync
+RUN uv pip install "deepsearcher[ollama]"
 
 COPY . .
 
